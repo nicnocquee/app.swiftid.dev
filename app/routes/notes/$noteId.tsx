@@ -4,7 +4,6 @@ import { Outlet, useCatch, useLoaderData } from "@remix-run/react";
 import invariant from "tiny-invariant";
 
 import type { Note } from "~/models/note.server";
-import { deleteNote } from "~/models/note.server";
 import { getNote } from "~/models/note.server";
 import { requireUserId } from "~/session.server";
 import { appendPathToUrl } from "~/utils";
@@ -27,15 +26,6 @@ export const loader: LoaderFunction = async ({ request, params }) => {
     note,
     editPath: `${new URL(appendPathToUrl(request.url, "/edit")).pathname}`,
   });
-};
-
-export const action: ActionFunction = async ({ request, params }) => {
-  const userId = await requireUserId(request);
-  invariant(params.noteId, "noteId not found");
-
-  await deleteNote({ userId, id: params.noteId });
-
-  return redirect("/notes");
 };
 
 export default function NoteDetailsPage() {
