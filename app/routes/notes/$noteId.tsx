@@ -1,15 +1,16 @@
-import type { ActionFunction, LoaderFunction } from "@remix-run/node";
-import { json, redirect } from "@remix-run/node";
-import { Form, useCatch, useLoaderData } from "@remix-run/react";
+import type { LoaderFunction } from "@remix-run/node";
+import { json } from "@remix-run/node";
+import { Outlet, useCatch, useLoaderData } from "@remix-run/react";
 import invariant from "tiny-invariant";
 
 import type { Note } from "~/models/note.server";
-import { deleteNote } from "~/models/note.server";
 import { getNote } from "~/models/note.server";
 import { requireUserId } from "~/session.server";
+import { appendPathToUrl } from "~/utils";
 
-type LoaderData = {
+export type NoteLoaderData = {
   note: Note;
+  editPath: string;
 };
 
 export const loader: LoaderFunction = async ({ request, params }) => {
@@ -20,36 +21,18 @@ export const loader: LoaderFunction = async ({ request, params }) => {
   if (!note) {
     throw new Response("Not Found", { status: 404 });
   }
-  return json<LoaderData>({ note });
-};
 
-export const action: ActionFunction = async ({ request, params }) => {
-  const userId = await requireUserId(request);
-  invariant(params.noteId, "noteId not found");
-
-  await deleteNote({ userId, id: params.noteId });
-
-  return redirect("/notes");
+  return json<NoteLoaderData>({
+    note,
+    editPath: `${new URL(appendPathToUrl(request.url, "/edit")).pathname}`,
+  });
 };
 
 export default function NoteDetailsPage() {
-  const data = useLoaderData() as LoaderData;
+  const data = useLoaderData() as NoteLoaderData;
+  const context = data;
 
-  return (
-    <div>
-      <h3 className="text-2xl font-bold">{data.note.title}</h3>
-      <p className="py-6">{data.note.body}</p>
-      <hr className="my-4" />
-      <Form method="post">
-        <button
-          type="submit"
-          className="rounded bg-blue-500  py-2 px-4 text-white hover:bg-blue-600 focus:bg-blue-400"
-        >
-          Delete
-        </button>
-      </Form>
-    </div>
-  );
+  return <Outlet context={context} />;
 }
 
 export function ErrorBoundary({ error }: { error: Error }) {
