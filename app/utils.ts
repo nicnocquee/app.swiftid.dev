@@ -45,3 +45,13 @@ export function useUser(): User {
 export function validateEmail(email: unknown): email is string {
   return typeof email === "string" && email.length > 3 && email.includes("@");
 }
+
+export function appendPathToUrl(
+  url: string,
+  pathWithSlashPrefix: string
+): string {
+  const urlObj = new URL(url);
+  return `${urlObj.protocol}//${urlObj.host}${
+    urlObj.pathname
+  }${pathWithSlashPrefix}?${urlObj.searchParams.toString()}`;
+}
